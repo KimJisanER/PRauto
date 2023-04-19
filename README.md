@@ -2,6 +2,12 @@
  
 #### PRauto is a tool that provides two main functionalities: [ Data Retrieval ] and [ Data Preprocessing ] in Bioinformatic and Chemoinformatics.
 _______________________________________________________________________________________________________________________________________
+### Install
+To install the PRauto, users can input the following command in the command-line interface:
+  
+```bash
+   pip install PRauto
+```
 ###
 ### Data Retrieval
 To use the Data Retrieval feature, users can input the following command in the command-line interface:
