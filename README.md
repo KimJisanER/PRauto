@@ -34,9 +34,10 @@ ________________________________________________________________________________
 ### Data Preprocessing
 
 <figure class="half">
-    <img src="![unaligned0001](https://user-images.githubusercontent.com/96029849/232978931-2598d4b2-9d89-4aa9-aa03-dbb9cd02efd9.png)">
-    <img src="![aligned0001](https://user-images.githubusercontent.com/96029849/232978971-2a6a60b2-5715-41fe-af48-71babf6414ee.png)">
-figure>
+  <a href="link"><img src="https://user-images.githubusercontent.com/96029849/232979848-cf3af836-33f2-49a0-a024-abc690adc746.png"align="center" width="49%"></a>
+  <a href="link"><img src="https://user-images.githubusercontent.com/96029849/232979950-e8c047a7-ef85-4917-b88f-b3c9da7302bc.png"align="center" width="49%"></a>
+  <figcaption>Input PDB and output PDB (color and result are irrelevant)</figcaption>
+</figure>
 
 #### To use the Data Preprocessing feature, users can input the following command in the command-line interface:
 
