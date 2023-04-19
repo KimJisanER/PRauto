@@ -8,10 +8,16 @@ To install the PRauto, users can input the following command in the command-line
 ```bash
    pip install PRauto
 ```
+If you have problems with PyMOL dependency,   
+try:
+```bash
+   conda install -c conda-forge pymol-open-source
+```
+
 ###
 ### Data Retrieval
 
-![PRauto_retrieve map](https://user-images.githubusercontent.com/96029849/232976971-21218261-f0f6-483c-b82f-77594ddf9113.png)
+![PRauto_retrieve map](https://user-images.githubusercontent.com/96029849/233053221-6cd73e81-9836-496d-b917-d4b31e02308f.png)
   
   
 #### To use the Data Retrieval feature, users can input the following command in the command-line interface:
@@ -33,11 +39,8 @@ ________________________________________________________________________________
 ###
 ### Data Preprocessing
 
-<figure class="half">
-  <a href="link"><img src="https://user-images.githubusercontent.com/96029849/232979848-cf3af836-33f2-49a0-a024-abc690adc746.png"align="center" width="49%"></a>
-  <a href="link"><img src="https://user-images.githubusercontent.com/96029849/232979950-e8c047a7-ef85-4917-b88f-b3c9da7302bc.png"align="center" width="49%"></a>
-  <figcaption>Input PDB and output PDB (color and result are irrelevant)</figcaption>
-</figure>
+![PRauto_prep drawio](https://user-images.githubusercontent.com/96029849/233054348-8caf262e-c06e-4b72-bb4e-3ea624830e06.png)
+
 
 #### To use the Data Preprocessing feature, users can input the following command in the command-line interface:
 
