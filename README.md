@@ -32,6 +32,12 @@ sdf files of ligands that interact with the target protein from the ChEMBL API.
 ________________________________________________________________________________________________________________________________________
 ###
 ### Data Preprocessing
+
+<figure class="half">
+    <img src="![unaligned0001](https://user-images.githubusercontent.com/96029849/232978931-2598d4b2-9d89-4aa9-aa03-dbb9cd02efd9.png)">
+    <img src="![aligned0001](https://user-images.githubusercontent.com/96029849/232978971-2a6a60b2-5715-41fe-af48-71babf6414ee.png)">
+figure>
+
 #### To use the Data Preprocessing feature, users can input the following command in the command-line interface:
 
 ```bash
