@@ -11,7 +11,7 @@ To install the PRauto, users can input the following command in the command-line
 ###
 ### Data Retrieval
 
-![PRauto_retrieve map](https://user-images.githubusercontent.com/96029849/232976194-aa15ac69-4027-4697-ac9e-5f74777f10fd.png)
+![PRauto_retrieve map](https://user-images.githubusercontent.com/96029849/232976971-21218261-f0f6-483c-b82f-77594ddf9113.png)
   
   
 #### To use the Data Retrieval feature, users can input the following command in the command-line interface:
