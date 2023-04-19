@@ -2,11 +2,8 @@
 
 import re
 import os
-import pandas as pd
 import requests
-from tqdm import tqdm
-# from get_ligand import download_chembl_compounds
-from collections import Counter
+
 
 def extract_accessions(fasta_file_path):
     with open(fasta_file_path, "r") as f:

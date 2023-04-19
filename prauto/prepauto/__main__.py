@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from Bio.PDB import *
 import os
 import time
 from tkinter import filedialog
+from Bio.PDB import *
 from Bio.PDB.PDBParser import PDBParser
 from tkinter import Tk
 import pymol

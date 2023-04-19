@@ -5,9 +5,7 @@ from chembl_webresource_client.settings import Settings
 from chembl_webresource_client.new_client import new_client
 from functools import lru_cache
 from tqdm import tqdm
-# import requests
-# from rdkit import Chem
-# from rdkit.Chem import AllChem
+
 
 Settings.Instance().CACHING = True
 @lru_cache(maxsize=128)
