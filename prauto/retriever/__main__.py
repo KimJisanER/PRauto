@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from get_fasta import *
-from get_pdb import *
-from get_ligand import *
+from .get_fasta import *
+from .get_pdb import *
+from .get_ligand import *
 from tqdm.auto import tqdm
 from tkinter import Tk
 from tkinter import filedialog
