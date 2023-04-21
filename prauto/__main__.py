@@ -1,57 +1,46 @@
 #!/usr/bin/env python
-
-from .retriever.get_fasta import *
-from .retriever.get_pdb import *
-from .retriever.get_ligand import *
-from tqdm.auto import tqdm
-from tkinter import Tk
-from tkinter import filedialog
-
-root = Tk()
-root.withdraw()
-
-mult = '\n' * 3
-global search_key
-
+#Korean description of PRato
 
 def main():
-    global search_key
-    target_dir = filedialog.askdirectory(title='Select a directory to work with')
-    os.chdir(target_dir)
-    print(f'Step1: Retrieve FASTA files{mult}')
+
     print(f"""
     
 ########################################################################################################
 
- > Please input [ Protein Name ] and [ Gene Name ] of your target.
+PRauto는 Bioinformatic & Chemoinformatics Automation tool로
+1. Data retrieve
+2. Data preprocessing
+두가지 자동화 기능을 제공합니다.
+
+prauto.retriever(Data retrieval)
+
+$ python -m prauto.retriever
+
+명령어를 커맨드라인 인터페이스에 입력함으로써 사용할 수 있습니다.
+
+검색어를 통해 uniprot API에서 FASTA file을 retrieve하고
+uniport accession을 통해 
+1.PDB file과 
+2.상호작용하는 ligand들의 sdf파일들도
+각각 RCSB PDB API와 ChEMBL API에서 retrieve해줍니다.
+
+결과물 : target 단백질 sequence들의 fasta파일, target 단백질 PDB파일들, target과 상호작용하는 리간드들의 sdf파일들
 
 
-    input 1  Protein Name with subtype :  ex. 5-hydroxytryptamine receptor 2A   
-                                                                             / Search term(uniprot API)
-                                                                               
-    input 2  Gene Name :  ex. HTR2A                                 
-                                     / Filtering term for Integrity of data 
+prauto.prepauto(Data preprocessing)
+
+$ python -m prauto.prepauto
+
+명령어를 커맨드라인 인터페이스에 입력함으로써 사용할 수 있습니다.
+
+한 디렉토리에 담겨있는 PDB파일들을 
+1. target에 해당되는 chain들만 분리해서 추출하고,기준이 되는 PDB에 맞춰 align해줍니다.
+2. 주요 리간드와 결합에 관여하는 분자를 제외한 불필요한 분자들을 제거해줍니다.(세션 피일에서는 제거 대신 숨김)
+
+결과물 : 전처리된 PDB파일들, PSE PyMOL 세션파일들
                                                   
 #########################################################################################################
                                                                                             """)
-    search_key = input('input 1  Protein Name with subtype :')
-    gene_name = input('input 2  Gene Name :')
-    dir_name = input('input Directory Name for FASTA file: ')
-    fasta_file_path = download_fasta(search_key, dir_name)
-    fasta_file_path = remove_outlier(search_key,gene_name,fasta_file_path)
-    pdb_dir = os.path.dirname(fasta_file_path)
-
-    print(f'Step2: Retrieve PDB files{mult}')
-    accessions_list = extract_accessions(fasta_file_path)
-    for accession in accessions_list:
-        pdb_ids = search_pdb_by_accession(accession)
-        if pdb_ids:
-            print(f'\nFound {len(pdb_ids)} PDB entries for {accession}')
-            download_pdb_files_by_acc(pdb_ids, accession, pdb_dir)
-
-    for accession in tqdm(accessions_list, total=len(accessions_list), desc='Searching Ligands'):
-        download_chembl_compounds(accession, pdb_dir)
-
 
 if __name__ == "__main__":
     main()

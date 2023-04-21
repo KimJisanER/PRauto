@@ -36,7 +36,6 @@ def download_chembl_compounds(accession,save_path):
 
                 compound_columns_list = ["molecule_chembl_id", 'molecule_structures']
                 compounds = compounds_api.filter(
-                    molecule_properties__num_ro5_violations=0,
                     molecule_chembl_id__in=[x['molecule_chembl_id'] for x in bioactivities],
                     molecule_properties__mw_freebase__lte=700).only(*compound_columns_list)
 

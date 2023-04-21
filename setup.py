@@ -1,11 +1,11 @@
 import os
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 import setuptools
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setuptools.setup(name='PRauto',
-        version = '0.12',
+        version = '0.122',
         packages = find_packages(include=['prauto','prauto.*']),
         url = 'https://github.com/KimJisanER/PRauto',
         license = 'MIT license',
@@ -26,7 +26,6 @@ setuptools.setup(name='PRauto',
            1. Extract the target chain from collected PDB files
            2. Align PDB files based on a chosen criterion
            3. Remove unnecessary molecules such as solvents and reagents from PDB files""",
-        long_description = open('README.md').read(),
         python_requires = '>=3',
         install_requires = required)
 
