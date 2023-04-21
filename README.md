@@ -19,7 +19,7 @@ If you have problems with PyMOL dependency, try:
 #### To use the Data Retrieval feature, users can input the following command in the command-line interface:
 
 ```bash
-   python -m prauto
+   python -m prauto.retriever
 ```
    
    
