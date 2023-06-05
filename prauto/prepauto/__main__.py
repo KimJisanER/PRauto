@@ -27,12 +27,20 @@ def extract_dbref_data(input_file):
                     pdb_end = int(line[20:24].strip())
                 except ValueError:
                     pdb_end = 0
+                try:
+                    uniprot_start = int(line[56:60].strip())
+                except ValueError:
+                    uniprot_start = 0
+                try:
+                    uniprot_end = int(line[63:67].strip())
+                except ValueError:
+                    uniprot_end = 0
                 db_accession = line[33:39].strip() or "NaN"
                 db_id = line[42:53].strip() or "NaN"
 
                 data_dict[key_count] = {"chain": chain, "pdb_start": pdb_start,
                                         "pdb_end": pdb_end, "db_accession": db_accession,
-                                        "db_id": db_id}
+                                        "db_id": db_id, "uniprot_start": uniprot_start, "uniprot_end": uniprot_end}
                 key_count += 1
     return data_dict
 
@@ -40,6 +48,7 @@ def extract_dbref_data(input_file):
 def extract_target_chains(pdb_files, target_id, output_dir):
     parser = PDBParser(QUIET=True)
     remove_dict = {}
+    renumber_dict = {}
     for pdb_file in pdb_files:
         try:
             # Parse the PDB file
@@ -98,10 +107,30 @@ def extract_target_chains(pdb_files, target_id, output_dir):
                             "pdb_start": current_data[keys]['pdb_start'],
                             "pdb_end": current_data[keys]['pdb_end']
                         }]
+                else:
+                    key = os.path.basename(pdb_file)
+                    if key in renumber_dict:
+                        renumber_dict[key].append({
+                            "chain": current_data[keys]['chain'],
+                            "db_id": current_data[keys]['db_id'],
+                            "pdb_start": current_data[keys]['pdb_start'],
+                            "pdb_end": current_data[keys]['pdb_end'],
+                            "uniprot_start": current_data[keys]['uniprot_start'],
+                            "uniprot_end": current_data[keys]['uniprot_end']
+                        })
+                    else:
+                        renumber_dict[key] = [{
+                            "chain": current_data[keys]['chain'],
+                            "db_id": current_data[keys]['db_id'],
+                            "pdb_start": current_data[keys]['pdb_start'],
+                            "pdb_end": current_data[keys]['pdb_end'],
+                            "uniprot_start": current_data[keys]['uniprot_start'],
+                            "uniprot_end": current_data[keys]['uniprot_end']
+                        }]
         except Exception as e:
             print(f"Failed to extract chains from {pdb_file}: {e}")
 
-    return remove_dict
+    return remove_dict, renumber_dict
 
 
 # 'ER0', #Tetramethyloctadecanoate
@@ -138,25 +167,25 @@ def extract_target_chains(pdb_files, target_id, output_dir):
 # 'CCN', #Acetonitrile
 # 'DMF', #Dimethylformamide
 # 'PLM', #Palmitic acid
+# 'J40',
 
 remove_list = ['ER0', 'OLA', 'OLB', 'OLC', 'PEG', '1PE', 'HEX', 'SO4', 'OCT', 'MYS', 'D12', 'TRD', 'EDT', 'D10', 'GOL',
                'PGE', '8K6', 'PE4', 'STE', 'UND', 'EDO', 'DMS', 'ACN', 'IPA', 'MOH', 'EOH', 'POL', 'SBT', '1BO', 'PGO',
-               'BU1', 'DMF', 'PLM']
+               'BU1', 'DMF', 'PLM', 'J40']
 
 
-def align_and_save_all_pdb_files(directory, ref_pdb_file, ligand_name, ligand_range, remove_dict):
+def align_and_save_all_pdb_files(directory, ref_pdb_file, ligand_name, ligand_range, remove_dict, renumber_dict):
     # Create a new directory for aligned pdb files
     parent_dir = os.path.dirname(directory)
     new_dir_name = os.path.join(parent_dir, f"{os.path.basename(directory)}_aligned")
     os.makedirs(new_dir_name, exist_ok=True)
-    new_session_dir = os.path.join(new_dir_name, f"{os.path.basename(directory)}_pse")
-    os.makedirs(new_session_dir, exist_ok=True)
 
     # Start PyMOL and load the reference pdb file
     pymol.finish_launching()
     time.sleep(1)  # wait for PyMOL to fully load
     pymol.cmd.load(ref_pdb_file, 'ref')
-    distance_cutoff = 5.0
+    distance_cutoff = 3.0
+    save = 1
 
     # Loop through all pdb files in the directory
     for pdb_file in os.listdir(directory):
@@ -164,7 +193,6 @@ def align_and_save_all_pdb_files(directory, ref_pdb_file, ligand_name, ligand_ra
 
             # Load the pdb file
             pymol.cmd.load(os.path.join(directory, pdb_file), pdb_file[:-4])
-
             name_for_dict = '_'.join(pdb_file.split('_')[:2]) + '.pdb'
 
             try:
@@ -172,37 +200,43 @@ def align_and_save_all_pdb_files(directory, ref_pdb_file, ligand_name, ligand_ra
                     rm_chain = data['chain']
                     rm_start = data['pdb_start']
                     rm_end = data['pdb_end']
+                    if (rm_start - rm_end) > 0:
+                        print(f'Wrong DBREF data: {pdb_file} , Check resi {rm_start}-{rm_end}')
+                        save = 0
                     pymol.cmd.remove(f"(chain {rm_chain} and resi {rm_start}-{rm_end})")
                     print(f"{pdb_file}, resi{rm_start}-{rm_end} has been removed")
 
-            except : pass
+            except: pass
+
+            try:
+                for data in renumber_dict[name_for_dict]:
+                    rn_chain = data['chain']
+                    rn_start = data['pdb_start']
+                    rn_end = data['pdb_end']
+                    un_start = data['uniprot_start']
+                    un_end = data['uniprot_end']
+                    minus = rn_start - un_start
+                    plus = rn_start - un_start
+
+                    if rn_start != un_start or rn_end != un_end:
+                        pymol.cmd.select('selection', f'chain {rn_chain} and resi {rn_start}-{rn_end}')
+                        pymol.cmd.alter('selection', f'resi=str(int(resi)-{minus})')
+                        pymol.cmd.select('selection2',
+                                         f'resi {un_start}-{un_end} and chain "" and polymer.protein and resn ""')
+                        pymol.cmd.alter('selection2', f'resi=str(int(resi)+{plus})')
+
+                        print(f"{pdb_file}, resi{rn_start}-{rn_end} has been renumbered")
+
+            except:
+                print(pdb_file, 'renumber error')
+                pass
 
             # Align the pdb file to the reference pdb file
             pymol.cmd.align(pdb_file[:-4], 'ref')
 
             pymol.cmd.origin('ref')
             pymol.cmd.zoom("all", 0.8)
-
-            # Hide unnecessary parts and save sessions
-            pymol.cmd.select("main_ligand", f"resn {ligand_name}")
-            pymol.cmd.select("main_organic", f"bymolecule(main_ligand expand {ligand_range})")
-            pymol.cmd.hide("everything", "organic and not main_organic")
-
-            pymol.cmd.select("nearby_solvent", f"solvent within {distance_cutoff} of main_organic")
-            pymol.cmd.hide('everything', 'solvent and not nearby_solvent')
-
-            pymol.cmd.select("target", "polymer.protein")
-            pymol.cmd.select("main_inorganic", f"inorganic within {distance_cutoff} of target")
-            pymol.cmd.select("not_nearby_inorganic", f"inorganic and not main_inorganic")
-            pymol.cmd.hide("everything", "not_nearby_inorganic")
-
-            for mol in remove_list:
-                pymol.cmd.hide("everything", f"resn {mol}")
-
-            new_session_name = f"{pdb_file[:-4]}_aligned.pse"
-            pymol.cmd.save(os.path.join(new_session_dir, new_session_name), pdb_file[:-4])
-            pymol.cmd.sync()  # wait for the save command to complete
-
+            #
             # Remove the organic and solvent
             pymol.cmd.select("main_ligand", f"resn {ligand_name}")
             pymol.cmd.select("main_organic", f"bymolecule(main_ligand expand {ligand_range})")
@@ -216,14 +250,16 @@ def align_and_save_all_pdb_files(directory, ref_pdb_file, ligand_name, ligand_ra
             pymol.cmd.select("main_inorganic", f"inorganic within {distance_cutoff} of target")
             pymol.cmd.select("not_nearby_inorganic", f"inorganic and not main_inorganic")
             pymol.cmd.remove("not_nearby_inorganic")
-            #
-            #
+            # #
+            # #
             for mol in remove_list:
                 pymol.cmd.remove(f"resn {mol}")
 
             # Save the aligned pdb file with a new name
             new_file_name = f"{pdb_file[:-4]}_aligned.pdb"
-            pymol.cmd.save(os.path.join(new_dir_name, new_file_name), pdb_file[:-4])
+            if save != 0:
+                pymol.cmd.save(os.path.join(new_dir_name, new_file_name), pdb_file[:-4])
+            else: save = 1
             pymol.cmd.sync()  # wait for the save command to complete
 
             # Delete the loaded pdb file to free up memory
@@ -234,7 +270,6 @@ def align_and_save_all_pdb_files(directory, ref_pdb_file, ligand_name, ligand_ra
 
     # Quit PyMOL
     pymol.cmd.quit()
-
 
 
 if __name__ == "__main__":
@@ -262,7 +297,7 @@ if __name__ == "__main__":
         os.makedirs(output_dir)
 
     # Extract the chains from the input PDB files that match the molecules in the reference PDB file
-    remove_dict= extract_target_chains(pdb_files, target_id, output_dir)
+    remove_dict, renumber_dict = extract_target_chains(pdb_files, target_id, output_dir)
     print('remove_dict: ',remove_dict)
     print('\n' * 7)
     print('###########  Target chains extraction Complete  ###########'+'\n' * 2)
@@ -272,6 +307,8 @@ if __name__ == "__main__":
     with open(os.path.join(align_ref), 'r') as f:
         ligand_menu = []
         for line in f:
+            if line.startswith('HETNAM'):
+                print(line)
             if line.startswith('HETATM'):
                 ligand_menu.append(line[17:20].replace(' ', ''))
         print(list(set(ligand_menu)))
@@ -280,6 +317,6 @@ if __name__ == "__main__":
     print('\n' * 1)
     ligand_range = input("Range around the ligand you do not want to delete(Å): ")
     print('\n' * 7)
-    align_and_save_all_pdb_files(output_dir, align_ref, ligand_name,ligand_range,remove_dict)
+    align_and_save_all_pdb_files(output_dir, align_ref, ligand_name, ligand_range, remove_dict, renumber_dict)
     print('\n' * 7)
     print('########### PDB Preprocessing Complete  ###########' + '\n' * 2)

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from .get_fasta import *
-from .get_pdb import *
-from .get_ligand import *
+from get_fasta import *
+from get_pdb import *
+from get_ligand import *
 from tqdm.auto import tqdm
 from tkinter import Tk
 from tkinter import filedialog
@@ -49,9 +49,25 @@ def main():
             print(f'\nFound {len(pdb_ids)} PDB entries for {accession}')
             download_pdb_files_by_acc(pdb_ids, accession, pdb_dir)
 
-    for accession in tqdm(accessions_list, total=len(accessions_list), desc='Searching Ligands'):
-        download_chembl_compounds(accession, pdb_dir)
-
+    print(f'Step3: Retrieve sdf files{mult}')
+    for accession in accessions_list:
+        sdf_file = os.path.join(pdb_dir, "ligands", f"{gene_name}_{accession}_ligands.sdf")
+        if os.path.exists(sdf_file):
+            continue
+        else:
+            retry_count = 0
+            max_retries = 100
+            while retry_count < max_retries:
+                try:
+                    download_chembl_compounds(accession, pdb_dir, gene_name)
+                    break  # Download successful, exit the retry loop
+                except Exception as e:
+                    print(f"Error occurred: {str(e)}")
+                    print(f"Retrying in 5 seconds... (retry count: {retry_count + 1}/{max_retries})")
+                    time.sleep(5)  # Wait for 5 seconds before retrying
+                    retry_count += 1
+            else:
+                print(f"Failed to download compounds for accession {accession} after {max_retries} retries.")
 
 if __name__ == "__main__":
     main()

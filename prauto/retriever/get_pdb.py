@@ -10,7 +10,7 @@ def extract_accessions(fasta_file_path):
         fasta_seq = f.readlines()
     uniprot_accessions = []
     for line in fasta_seq:
-        if line.startswith('>'):
+        if line.startswith('>sp'):
             uniprot_accessions.append(line.split('|')[1])
     return list(set(uniprot_accessions))
 
