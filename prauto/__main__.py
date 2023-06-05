@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from retriever.get_fasta import *
-from retriever.get_pdb import *
-from retriever.get_ligand import *
+from .retriever.get_fasta import *
+from .retriever.get_pdb import *
+from .retriever.get_ligand import *
 from tqdm.auto import tqdm
 from tkinter import Tk
 from tkinter import filedialog
