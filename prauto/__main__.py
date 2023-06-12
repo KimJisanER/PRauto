@@ -4,6 +4,7 @@ from .retriever.get_fasta import *
 from .retriever.get_pdb import *
 from .retriever.get_ligand import *
 from tqdm.auto import tqdm
+import argparse
 from tkinter import Tk
 from tkinter import filedialog
 
@@ -14,18 +15,18 @@ mult = '\n' * 3
 global search_key
 
 
-def main():
+def main(retrieve_sdf=False):
     global search_key
     print(f'Step1: Retrieve FASTA files{mult}')
     print(f"""
-    
+
 ########################################################################################################
 
 This is a bulk data retrieval version of Prauto.
 
 To make prauto work properly, the Directory, Protein Name, and Gene Name 
 should have been entered in the format of prauto_order_form.csv
-                                                  
+
 #########################################################################################################
                                                                                             """)
     order_form = filedialog.askopenfilename(title='Select the order_form')
@@ -50,25 +51,31 @@ should have been entered in the format of prauto_order_form.csv
                     print(f'\nFound {len(pdb_ids)} PDB entries for {accession}')
                     download_pdb_files_by_acc(pdb_ids, accession, pdb_dir)
 
-            print(f'Step3: Retrieve sdf files{mult}')
-            for accession in accessions_list:
-                sdf_file = os.path.join(pdb_dir, "ligands", f"{gene_name}_{accession}_ligands.sdf")
-                if os.path.exists(sdf_file):
-                    continue
-                else:
-                    retry_count = 0
-                    max_retries = 100
-                    while retry_count < max_retries:
-                        try:
-                            download_chembl_compounds(accession, pdb_dir, gene_name)
-                            break  # Download successful, exit the retry loop
-                        except Exception as e:
-                            print(f"Error occurred: {str(e)}")
-                            print(f"Retrying in 5 seconds... (retry count: {retry_count + 1}/{max_retries})")
-                            time.sleep(5)  # Wait for 5 seconds before retrying
-                            retry_count += 1
+            if retrieve_sdf:
+                print(f'Step3: Retrieve sdf files{mult}')
+                for accession in accessions_list:
+                    sdf_file = os.path.join(pdb_dir, "ligands", f"{gene_name}_{accession}_ligands.sdf")
+                    if os.path.exists(sdf_file):
+                        continue
                     else:
-                        print(f"Failed to download compounds for accession {accession} after {max_retries} retries.")
+                        retry_count = 0
+                        max_retries = 100
+                        while retry_count < max_retries:
+                            try:
+                                download_chembl_compounds(accession, pdb_dir, gene_name)
+                                break  # Download successful, exit the retry loop
+                            except Exception as e:
+                                print(f"Error occurred: {str(e)}")
+                                print(f"Retrying in 5 seconds... (retry count: {retry_count + 1}/{max_retries})")
+                                time.sleep(5)  # Wait for 5 seconds before retrying
+                                retry_count += 1
+                        else:
+                            print(
+                                f"Failed to download compounds for accession {accession} after {max_retries} retries.")
+
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Prauto')
+    parser.add_argument('--sdf', action='store_true', help='Retrieve sdf files')
+    args = parser.parse_args()
+    main(retrieve_sdf=args.sdf)

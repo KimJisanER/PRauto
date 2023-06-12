@@ -31,7 +31,7 @@ def download_chembl_compounds(accession, save_path,gene_name):
     targets_id = list(set([target['target_chembl_id'] for target in targets]))
 
     if len(targets_id) != 0:
-        target_columns_list = ['molecule_chembl_id', 'molecule_name', 'molecule_max_phase', 'molecular_weight', 'alogp',
+        target_columns_list = ['assay_chembl_id', 'molecule_chembl_id', 'molecule_name', 'molecule_max_phase', 'molecular_weight', 'alogp',
                                'standard_type', 'standard_relation', 'standard_value', 'standard_units',
                                'pchembl_value', 'assay_type', 'target_name', 'target_organism', 'target_type']
 
@@ -47,6 +47,7 @@ def download_chembl_compounds(accession, save_path,gene_name):
             compound_columns_list = ["molecule_chembl_id", 'molecule_structures', 'molecule_properties', 'mw_freebase']
             for bioactivity_chunk in chunked_iterable(bioactivities_list, 100):
                 compounds = compounds_api.filter(
+                    molecule_type='Small molecule',
                     molecule_chembl_id__in=[x['molecule_chembl_id'] for x in bioactivity_chunk],
                     molecule_properties__mw_freebase__lte=700,
                     molfile__isnull=False
@@ -66,25 +67,53 @@ def download_chembl_compounds(accession, save_path,gene_name):
                                 continue
                             mol_file = ''
                             molfile = record['molecule_structures']['molfile']
-                            mw_freebase = f"> <mw_freebase>\n{record['molecule_properties']['mw_freebase']}\n"
+                            targets_chembl = f"> <target_chembl_id>\n{target}\n"
+                            # target_accession 추후에 뺄지 정하기
+                            target_accession = f"\n> <target_accession>\n{accession}\n"
+                            mw_freebase = f"\n> <mw_freebase>\n{record['molecule_properties']['mw_freebase']}\n"
                             alogp = f"\n> <alogp>\n{record['molecule_properties']['alogp']}\n"
                             mol_file += molfile
+                            mol_file += targets_chembl
+                            mol_file += target_accession
                             mol_file += mw_freebase
                             mol_file += alogp
                             mol_file += "\n> <bioactivities>\n"
 
-                            pChEMBL_value = 0
+                            pChEMBL_ki = 0
+                            pChEMBL_kd = 0
+                            pChEMBL_ec = 0
+                            pChEMBL_ic = 0
+
                             for i in bioactivities_list:
                                 if i['molecule_chembl_id'] == record['molecule_chembl_id']:
-                                    bioactivities_str = f"assay_type: {i['assay_type']}, pchembl_value: {i['pchembl_value']}, {i['standard_type']}{i['standard_relation']}{i['standard_value']}{i['standard_units']}\n"
+                                    bioactivities_str = f"assay_chembl_id: {i['assay_chembl_id']}, assay_type: {i['assay_type']}, pchembl_value: {i['pchembl_value']}, {i['standard_type']}{i['standard_relation']}{i['standard_value']}{i['standard_units']}\n"
                                     mol_file += bioactivities_str
-                                    if i['pchembl_value'] is not None:
-                                        if float(i['pchembl_value']) > float(pChEMBL_value):
-                                            pChEMBL_value = str(i['pchembl_value'])
-                            if pChEMBL_value == 0 or pChEMBL_value == '0':
-                                pChEMBL_value = 'None'
-                            pChEMBL_value_str = f"\n> <pChEMBL_value>\n{pChEMBL_value}\n"
-                            mol_file += pChEMBL_value_str
+
+                                    if i['standard_type'] =='Ki' and i['pchembl_value'] is not None:
+                                            if float(i['pchembl_value']) > float(pChEMBL_ki):
+                                                pChEMBL_ki = str(i['pchembl_value'])
+
+                                    if i['standard_type'] =='Kd' and i['pchembl_value'] is not None:
+                                            if float(i['pchembl_value']) > float(pChEMBL_kd):
+                                                pChEMBL_kd = str(i['pchembl_value'])
+
+                                    if i['standard_type'] =='IC50' and i['pchembl_value'] is not None:
+                                            if float(i['pchembl_value']) > float(pChEMBL_ic):
+                                                pChEMBL_ic = str(i['pchembl_value'])
+
+                                    if i['standard_type'] =='EC50' and i['pchembl_value'] is not None:
+                                            if float(i['pchembl_value']) > float(pChEMBL_ec):
+                                                pChEMBL_ec = str(i['pchembl_value'])
+
+                            pChEMBL_value_Ki = f"\n> <pChEMBL_value_Ki>\n{pChEMBL_ki}\n".replace("\n0\n", "\nNone\n")
+                            pChEMBL_value_Kd = f"\n> <pChEMBL_value_Kd>\n{pChEMBL_kd}\n".replace("\n0\n", "\nNone\n")
+                            pChEMBL_value_IC50 = f"\n> <pChEMBL_value_IC50>\n{pChEMBL_ic}\n".replace("\n0\n", "\nNone\n")
+                            pChEMBL_value_EC50 = f"\n> <pChEMBL_value_EC50>\n{pChEMBL_ec}\n".replace("\n0\n", "\nNone\n")
+
+                            mol_file += pChEMBL_value_Ki
+                            mol_file += pChEMBL_value_Kd
+                            mol_file += pChEMBL_value_IC50
+                            mol_file += pChEMBL_value_EC50
 
                             with open(file_path, 'w') as outfile:
                                 outfile.write(mol_file)
