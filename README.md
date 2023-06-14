@@ -16,6 +16,13 @@ If you have problems with PyMOL dependency, try:
 ###
 ### Data Retrieval
   
+#### To use the Bulk Data Retrieval feature, users can input the following command in the command-line interface(order form.csv must be filled first, --sdf option : include sdf file retrieval) :
+
+```bash
+   python -m prauto --sdf   or   python -m prauto
+```
+
+
 #### To use the Data Retrieval feature, users can input the following command in the command-line interface:
 
 ```bash
