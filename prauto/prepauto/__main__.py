@@ -62,18 +62,19 @@ def extract_target_chains(pdb_files, target_id, output_dir):
             target_chain_ids = list(set(target_chain))
             print(f"{os.path.basename(pdb_file).replace('.pdb', '')}'s target chains : ", target_chain_ids)
             if len(target_chain_ids) == 0 :
-                for chain in structure.get_chains():
-                    # Get the ID of the chain and check if it should be saved
-                    chain_id = chain.get_id()
-                    output_file = os.path.join(output_dir,
-                                               f"{os.path.basename(pdb_file).replace('.pdb', '')}_{chain_id}_not_matched.pdb")
-                    print(f"{os.path.basename(output_file)} extraction completed")
-                    # Save the separated chain to a PDB file
-                    io = PDBIO()
-                    io.set_structure(chain)
-                    if not os.path.exists(os.path.dirname(output_file)):
-                        os.makedirs(os.path.dirname(output_file))
-                    io.save(output_file)
+                pass
+            #     for chain in structure.get_chains():
+            #         # Get the ID of the chain and check if it should be saved
+            #         chain_id = chain.get_id()
+            #         output_file = os.path.join(output_dir,
+            #                                    f"{os.path.basename(pdb_file).replace('.pdb', '')}_{chain_id}_not_matched.pdb")
+            #         print(f"{os.path.basename(output_file)} extraction completed")
+            #         # Save the separated chain to a PDB file
+            #         io = PDBIO()
+            #         io.set_structure(chain)
+            #         if not os.path.exists(os.path.dirname(output_file)):
+            #             os.makedirs(os.path.dirname(output_file))
+            #         io.save(output_file)
 
             else:
                 for chain in structure.get_chains():
@@ -205,8 +206,13 @@ def align_and_save_all_pdb_files(directory, ref_pdb_file, ligand_name, ligand_ra
                         save = 0
                     pymol.cmd.remove(f"(chain {rm_chain} and resi {rm_start}-{rm_end})")
                     print(f"{pdb_file}, resi{rm_start}-{rm_end} has been removed")
+            except:
+                pass
 
-            except: pass
+            # try:
+            #     pymol.cmd.remove("(resi 1000-* and not hetatm)")
+            # except:
+            #     pass
 
             try:
                 for data in renumber_dict[name_for_dict]:
@@ -230,6 +236,7 @@ def align_and_save_all_pdb_files(directory, ref_pdb_file, ligand_name, ligand_ra
             except:
                 print(pdb_file, 'renumber error')
                 pass
+
 
             # Align the pdb file to the reference pdb file
             pymol.cmd.align(pdb_file[:-4], 'ref')
@@ -302,13 +309,16 @@ if __name__ == "__main__":
     print('\n' * 7)
     print('###########  Target chains extraction Complete  ###########'+'\n' * 2)
     print('Step 2: Start preprocessing with pymol'+'\n' * 8)
-    align_ref = filedialog.askopenfilename(title='Select the file you want to use as the align criteria',initialdir=output_dir)
+    align_ref = filedialog.askopenfilename(title='Select the file you want to use as the align criteria', initialdir=output_dir)
+
+    with open(os.path.join(ref_pdb_file), 'r') as f:
+        for line in f:
+            if line.startswith('HETNAM'):
+                print(line)
 
     with open(os.path.join(align_ref), 'r') as f:
         ligand_menu = []
         for line in f:
-            if line.startswith('HETNAM'):
-                print(line)
             if line.startswith('HETATM'):
                 ligand_menu.append(line[17:20].replace(' ', ''))
         print(list(set(ligand_menu)))
